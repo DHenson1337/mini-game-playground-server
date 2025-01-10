@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 
 // Controller functions for user operations
+//Create User
 export const createUser = async (req, res) => {
   try {
     const { username, avatar } = req.body;
@@ -11,6 +12,7 @@ export const createUser = async (req, res) => {
   }
 };
 
+//Get User
 export const getUser = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });
@@ -23,6 +25,7 @@ export const getUser = async (req, res) => {
   }
 };
 
+//Update User
 export const updateUser = async (req, res) => {
   try {
     const { newUsername, newAvatar } = req.body;
@@ -51,6 +54,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
+//Delete User
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });

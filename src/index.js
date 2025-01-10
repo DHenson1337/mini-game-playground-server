@@ -5,10 +5,11 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/conn.js";
+import rateLimit from "express-rate-limit";
 
 //Importing routes
-
 import userRoutes from "./routes/userRoutes.js";
+import scoreRoutes from "./routes/scoreRoutes.js";
 
 dotenv.config();
 
@@ -41,9 +42,18 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-//Routes
+//Rate limiter (prevents server abuse)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, //15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMS
+});
 
+//Applies to all routes (Rate limiter)
+app.use(limiter);
+
+//Routes
 app.use("/api/users", userRoutes);
+app.use("/api/scores", scoreRoutes);
 
 //Port Listener
 httpServer.listen(PORT, () => {
