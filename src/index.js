@@ -6,6 +6,10 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/conn.js";
 
+//Importing routes
+
+import userRoutes from "./routes/userRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -36,6 +40,10 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+//Routes
+
+app.use("/api/users", userRoutes);
 
 //Port Listener
 httpServer.listen(PORT, () => {
