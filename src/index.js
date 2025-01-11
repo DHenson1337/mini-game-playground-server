@@ -10,6 +10,8 @@ import rateLimit from "express-rate-limit";
 //Importing routes
 import userRoutes from "./routes/userRoutes.js";
 import scoreRoutes from "./routes/scoreRoutes.js";
+import gameRoutes from "./routes/gameRoutes.js";
+import errorHandler from "./utils/errorHandler.js";
 
 dotenv.config();
 
@@ -54,8 +56,12 @@ app.use(limiter);
 //Routes
 app.use("/api/users", userRoutes);
 app.use("/api/scores", scoreRoutes);
+app.use("/api/games", gameRoutes);
 
 //Port Listener
 httpServer.listen(PORT, () => {
   console.log(`Server is racing 🏍 Sanic on port  ${PORT}`);
 });
+
+//Error handling middleware
+app.use(errorHandler);

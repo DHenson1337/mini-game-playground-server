@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Score from "./score.js"; //So I can tie the scores to a userId
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -39,10 +40,15 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-//Pre-delte hook for cleaning up user data if needed later
+//Cleanup for when a user goes Nuclear on thier account :(
 userSchema.pre("deleteOne", { document: true }, async function (next) {
-  //To do - - add score cleanup here when score model is created.
-  next();
+  try {
+    //Delete all scores associated with this user
+    await Score.deleteMany({ userId: this._id });
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 const User = mongoose.model("User", userSchema);
