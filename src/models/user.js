@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
+    minlength: [3, "Username must be at least 3 characters long"],
+    match: [
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores",
+    ],
   },
   avatar: {
     type: String,
@@ -17,8 +22,25 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+//Custom method to check if username exists
+userSchema.statics.usernameExists = async function (username) {
+  const user = await this.findOne({ username });
+  return user !== null;
+};
+
+// Middleware to handle unique username validation
+userSchema.pre("save", async function (next) {
+  if (this.isModified("username")) {
+    const exists = await this.constructor.usernameExists(this.username);
+    if (exists && this.isNew) {
+      throw new Error("Username already exists");
+    }
+  }
+  next();
+});
+
 //Pre-delte hook for cleaning up user data if needed later
-userSchema.pre("delete", { document: true }, async function (next) {
+userSchema.pre("deleteOne", { document: true }, async function (next) {
   //To do - - add score cleanup here when score model is created.
   next();
 });
