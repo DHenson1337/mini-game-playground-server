@@ -11,10 +11,18 @@ const gameSchema = new mongoose.Schema({
     required: true,
   },
   description: String,
-  imageUrl: String,
+  rules: [
+    {
+      type: String,
+    },
+  ],
   enabled: {
     type: Boolean,
     default: true,
+  },
+  order: {
+    type: Number,
+    default: 0,
   },
 });
 
