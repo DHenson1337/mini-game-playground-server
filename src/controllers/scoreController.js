@@ -29,7 +29,7 @@ export const getGameLeaderboard = async (req, res) => {
     const { gameId } = req.params;
     const scores = await Score.find({ gameId })
       .sort({ score: -1 }) // Highest scores first
-      .limit(10)
+      .limit(100) // Limits how many scores show up
       .populate("userId", "username avatar"); // Get user details
 
     res.json(scores);
