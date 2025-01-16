@@ -1,6 +1,12 @@
 import Game from "../models/game.js";
 
-//Responsible for creating new games on the list
+/**
+ * Creates a new game in the database
+ * @route POST /api/games
+ * @param {Object} req.body - Game data including title, description, engineType, etc.
+ * @returns {Object} Created game object
+ * @throws {400} If validation fails or required fields are missing
+ */
 export const createGame = async (req, res) => {
   try {
     const game = await Game.create(req.body);
@@ -10,17 +16,55 @@ export const createGame = async (req, res) => {
   }
 };
 
-//Responsible for showing all the games
+/**
+ * Retrieves games with pagination and optional category filtering
+ * @route GET /api/games
+ * @param {string} req.query.category - Optional category filter
+ * @param {number} req.query.page - Page number (default: 1)
+ * @param {number} req.query.limit - Items per page (default: 20)
+ * @returns {Object} Paginated games with metadata
+ * @throws {500} If server error occurs
+ */
 export const getGames = async (req, res) => {
   try {
-    const games = await Game.find().sort("order"); // Sort by order field
-    res.json(games);
+    // Extract query parameters with defaults
+    const { category, page = 1, limit = 20 } = req.query;
+    const query = {};
+
+    // Add category filter if provided
+    if (category) {
+      query.category = category;
+    }
+
+    // Fetch games with pagination
+    const games = await Game.find(query)
+      .sort({ featured: -1, order: 1, createdAt: -1 }) // Sort featured games first
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    // Get total count for pagination metadata
+    const total = await Game.countDocuments(query);
+
+    // Return games with pagination metadata
+    res.json({
+      games,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      totalGames: total,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-//Responsible for getting a game by ID
+/**
+ * Retrieves a specific game by its gameId
+ * @route GET /api/games/:gameId
+ * @param {string} req.params.gameId - Unique game identifier
+ * @returns {Object} Game object if found
+ * @throws {404} If game not found
+ * @throws {500} If server error occurs
+ */
 export const getGame = async (req, res) => {
   try {
     const game = await Game.findOne({ gameId: req.params.gameId });
@@ -33,7 +77,15 @@ export const getGame = async (req, res) => {
   }
 };
 
-//Update an existing game
+/**
+ * Updates an existing game
+ * @route PUT /api/games/:gameId
+ * @param {string} req.params.gameId - Unique game identifier
+ * @param {Object} req.body - Updated game data
+ * @returns {Object} Updated game object
+ * @throws {404} If game not found
+ * @throws {500} If server error occurs
+ */
 export const updateGame = async (req, res) => {
   try {
     const game = await Game.findOneAndUpdate(
@@ -50,43 +102,102 @@ export const updateGame = async (req, res) => {
   }
 };
 
-//Seeding new Games
-// server/src/controllers/gameController.js
+/**
+ * Initializes the database with default games if empty
+ * @route POST /api/games/initialize
+ * @description Seeds the database with initial game data if no games exist
+ * @returns {Object} Success message
+ * @throws {500} If initialization fails
+ */
 export const initializeGames = async (req, res) => {
   try {
     const existingGames = await Game.find();
     if (existingGames.length === 0) {
+      // Initial game data with popular classic games
       const gamesData = [
         {
-          gameId: "apple-catcher",
-          title: "Apple Catcher",
-          description:
-            "Catch falling apples while avoiding the rotten ones in this fast-paced arcade game!",
-          rules: [
-            "🍏 You have 45 seconds to catch the Apples!",
-            "🎮 Use WASD or Arrow Keys to move",
-            "🎯 Catch more than 30 apples to win",
-            "⚠️ Watch out for rotten apples!",
-            "⭐ Golden apples give bonus points",
+          gameId: "tetris-classic",
+          title: "Tetris Classic",
+          description: "The classic block-stacking puzzle game",
+          engineType: "js",
+          sourceUrl: "/games/tetris/index.js",
+          category: "puzzle",
+          controls: [
+            { key: "←/→", action: "Move block" },
+            { key: "↑", action: "Rotate" },
+            { key: "↓", action: "Soft drop" },
+            { key: "Space", action: "Hard drop" },
           ],
-          enabled: true,
+          featured: true,
           order: 1,
         },
-        // Add placeholder games
-        ...Array(6)
-          .fill(null)
-          .map((_, index) => ({
-            gameId: `coming-soon-${index + 1}`,
-            title: "Coming Soon",
-            description: "New game under development",
-            rules: [],
-            enabled: false,
-            order: index + 2,
-          })),
+        {
+          gameId: "pacman",
+          title: "Pac-Man",
+          description: "Navigate mazes and avoid ghosts in this arcade classic",
+          engineType: "js",
+          sourceUrl: "/games/pacman/index.js",
+          category: "arcade",
+          controls: [{ key: "Arrow Keys", action: "Move Pac-Man" }],
+          featured: true,
+          order: 2,
+        },
+        {
+          gameId: "snake",
+          title: "Snake",
+          description:
+            "Grow your snake by eating food, but don't hit the walls or yourself!",
+          engineType: "js",
+          sourceUrl: "/games/snake/index.js",
+          category: "arcade",
+          controls: [{ key: "Arrow Keys", action: "Control snake" }],
+          order: 3,
+        },
+        {
+          gameId: "2048",
+          title: "2048",
+          description:
+            "Combine numbers to reach 2048 in this addictive puzzle game",
+          engineType: "js",
+          sourceUrl: "/games/2048/index.js",
+          category: "puzzle",
+          controls: [{ key: "Arrow Keys", action: "Slide tiles" }],
+          order: 4,
+        },
       ];
+
       await Game.insertMany(gamesData);
+      res.status(200).json({ message: "Games initialized successfully" });
+    } else {
+      res.status(200).json({ message: "Games already initialized" });
     }
-    res.status(200).json({ message: "Games initialized successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Retrieves games grouped by their categories
+ * @route GET /api/games/categories
+ * @description Gets all games organized by their categories
+ * @returns {Object} Object with categories as keys and array of games as values
+ * @throws {500} If server error occurs
+ */
+export const getGamesByCategory = async (req, res) => {
+  try {
+    // Get unique categories
+    const categories = await Game.distinct("category");
+    const gamesByCategory = {};
+
+    // Fetch games for each category
+    for (const category of categories) {
+      gamesByCategory[category] = await Game.find({ category }).sort({
+        featured: -1,
+        order: 1,
+      });
+    }
+
+    res.json(gamesByCategory);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
