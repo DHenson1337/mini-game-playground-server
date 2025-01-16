@@ -44,14 +44,31 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-//Rate limiter (prevents server abuse)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, //15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMS
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Increase this from your current limit
+  message: "Too many requests from this IP, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Create a specific limiter for game fetching
+const gameLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // Increased from 30 to 100 requests per minute
+  message: {
+    status: 429,
+    message: "Too many requests, please try again later",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 //Applies to all routes (Rate limiter)
 app.use(limiter);
+
+// Apply the specific limiter only to game routes
+app.use("/api/games", gameLimiter);
 
 //Routes
 app.use("/api/users", userRoutes);

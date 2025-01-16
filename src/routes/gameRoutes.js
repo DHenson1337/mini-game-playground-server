@@ -5,19 +5,22 @@ import {
   getGame,
   updateGame,
   initializeGames,
-  getGamesByCategory,
 } from "../controllers/gameController.js";
 
 const router = express.Router();
 
+// Initialize endpoint - this MUST come before the /:gameId route
+
+//http://localhost:5000/api/games/init
+router.get("/init", initializeGames); // Changed to GET and simplified path
+router.post("/init", initializeGames); // Also allow POST for the same endpoint
+
 // Basic CRUD routes
 router.post("/", createGame);
 router.get("/", getGames);
-router.get("/categories", getGamesByCategory);
+
+// This must come after other specific routes
 router.get("/:gameId", getGame);
 router.put("/:gameId", updateGame);
-
-// Initialization route - POST to http://localhost:5000/api/games/initialize
-router.post("/initialize", initializeGames);
 
 export default router;

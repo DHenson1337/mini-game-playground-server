@@ -67,12 +67,15 @@ export const getGames = async (req, res) => {
  */
 export const getGame = async (req, res) => {
   try {
+    console.log("Requested gameId:", req.params.gameId);
     const game = await Game.findOne({ gameId: req.params.gameId });
     if (!game) {
+      console.log("Game not found in database");
       return res.status(404).json({ message: "Game not found" });
     }
     res.json(game);
   } catch (error) {
+    console.error("Error in getGame:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -111,68 +114,49 @@ export const updateGame = async (req, res) => {
  */
 export const initializeGames = async (req, res) => {
   try {
-    const existingGames = await Game.find();
-    if (existingGames.length === 0) {
-      // Initial game data with popular classic games
-      const gamesData = [
-        {
-          gameId: "tetris-classic",
-          title: "Tetris Classic",
-          description: "The classic block-stacking puzzle game",
-          engineType: "js",
-          sourceUrl: "/games/tetris/index.js",
-          category: "puzzle",
-          controls: [
-            { key: "←/→", action: "Move block" },
-            { key: "↑", action: "Rotate" },
-            { key: "↓", action: "Soft drop" },
-            { key: "Space", action: "Hard drop" },
-          ],
-          featured: true,
-          order: 1,
-        },
-        {
-          gameId: "pacman",
-          title: "Pac-Man",
-          description: "Navigate mazes and avoid ghosts in this arcade classic",
-          engineType: "js",
-          sourceUrl: "/games/pacman/index.js",
-          category: "arcade",
-          controls: [{ key: "Arrow Keys", action: "Move Pac-Man" }],
-          featured: true,
-          order: 2,
-        },
-        {
-          gameId: "snake",
-          title: "Snake",
-          description:
-            "Grow your snake by eating food, but don't hit the walls or yourself!",
-          engineType: "js",
-          sourceUrl: "/games/snake/index.js",
-          category: "arcade",
-          controls: [{ key: "Arrow Keys", action: "Control snake" }],
-          order: 3,
-        },
-        {
-          gameId: "2048",
-          title: "2048",
-          description:
-            "Combine numbers to reach 2048 in this addictive puzzle game",
-          engineType: "js",
-          sourceUrl: "/games/2048/index.js",
-          category: "puzzle",
-          controls: [{ key: "Arrow Keys", action: "Slide tiles" }],
-          order: 4,
-        },
-      ];
+    console.log("Starting game initialization...");
 
-      await Game.insertMany(gamesData);
-      res.status(200).json({ message: "Games initialized successfully" });
-    } else {
-      res.status(200).json({ message: "Games already initialized" });
-    }
+    // First, clear existing games
+    await Game.deleteMany({});
+    console.log("Cleared existing games");
+
+    const gamesData = [
+      {
+        gameId: "tetris-classic",
+        title: "Tetris Classic",
+        description: "The classic block-stacking puzzle game",
+        engineType: "js",
+        sourceUrl: "/games/tetris/index.js",
+        category: "puzzle",
+        controls: [
+          { key: "←/→", action: "Move block" },
+          { key: "↑", action: "Rotate" },
+          { key: "↓", action: "Soft drop" },
+          { key: "Space", action: "Hard drop" },
+        ],
+        featured: true,
+        enabled: true,
+        order: 1,
+        thumbnailUrl: "/assets/placeholders/tetris-thumb.png",
+        previewUrl: "/assets/placeholders/tetris-preview.png",
+      },
+      // Add more games here later
+    ];
+
+    console.log("Inserting games:", gamesData);
+    const insertedGames = await Game.insertMany(gamesData);
+    console.log("Games inserted successfully:", insertedGames);
+
+    res.status(200).json({
+      message: "Games initialized successfully",
+      games: insertedGames,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error initializing games:", error);
+    res.status(500).json({
+      message: "Failed to initialize games",
+      error: error.message,
+    });
   }
 };
 
