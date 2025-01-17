@@ -1,5 +1,3 @@
-// controllers/authController.js
-
 import User from "../models/user.js";
 import authService from "../services/authService.js";
 
@@ -27,6 +25,25 @@ async function generateGuestUsername() {
 
   return username;
 }
+
+/**
+ * Check authentication status
+ * @route GET /api/auth/check
+ */
+export const checkAuth = async (req, res) => {
+  try {
+    // If the middleware passes, user is authenticated
+    res.json({
+      authenticated: true,
+      user: req.user,
+    });
+  } catch (error) {
+    res.status(401).json({
+      authenticated: false,
+      message: "Not authenticated",
+    });
+  }
+};
 
 /**
  * Register a new user
