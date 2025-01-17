@@ -1,3 +1,5 @@
+// backend/routes/scoreRoutes.js
+
 import express from "express";
 import {
   createScore,
@@ -7,13 +9,13 @@ import {
 
 const router = express.Router();
 
-// Submit a new score
+// Route for submitting a new score
 router.post("/", createScore);
 
-// Get leaderboard for a specific game
+// Route for getting leaderboard for a specific game
 router.get("/game/:gameId", getGameLeaderboard);
 
-// Get all scores for a specific user
+// Route for getting all scores for a specific user
 router.get("/user/:username", getUserScores);
 
 export default router;

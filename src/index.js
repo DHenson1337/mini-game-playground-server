@@ -29,6 +29,14 @@ const io = new Server(httpServer, {
 //Middleware
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`, {
+    body: req.body,
+    params: req.params,
+    query: req.query,
+  });
+  next();
+});
 
 //MongoDB Connection
 connectDB();

@@ -44,7 +44,7 @@ userSchema.pre("save", async function (next) {
 //Cleanup for when a user goes Nuclear on thier account :(
 userSchema.pre("deleteOne", { document: true }, async function (next) {
   try {
-    //Delete all scores associated with this user
+    // Delete all scores associated with this user
     await Score.deleteMany({ userId: this._id });
     next();
   } catch (error) {
