@@ -7,32 +7,40 @@ import { Server } from "socket.io";
 import connectDB from "./config/conn.js";
 import rateLimit from "express-rate-limit";
 import SocketService from "./services/socketService.js";
+import cookieParser from "cookie-parser";
 
 //Importing routes
 import userRoutes from "./routes/userRoutes.js";
 import scoreRoutes from "./routes/scoreRoutes.js";
 import gameRoutes from "./routes/gameRoutes.js";
 import errorHandler from "./utils/errorHandler.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-//Socket.IO setup
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // This is important for cookies
+};
+
+// Socket.IO setup with CORS
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
+  cors: corsOptions,
 });
 
 // Initialize Socket Service
 const socketService = new SocketService(io);
 socketService.initialize();
 
-//Middleware
-app.use(cors());
+// Middleware
+app.use(cookieParser()); // Add cookie parser before other middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`, {
@@ -74,6 +82,7 @@ app.use(limiter);
 app.use("/api/games", gameLimiter);
 
 //Routes
+app.use("/api/auth", authRoutes); // Needs to be before other routes
 app.use("/api/users", userRoutes);
 app.use("/api/scores", scoreRoutes(socketService));
 app.use("/api/games", gameRoutes);

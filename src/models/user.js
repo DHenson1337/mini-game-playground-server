@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Score from "./score.js"; //So I can tie the scores to a userId
+import Score from "./score.js";
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -14,9 +14,19 @@ const userSchema = new mongoose.Schema({
       "Username can only contain letters, numbers, and underscores",
     ],
   },
+  password: {
+    type: String,
+    required: function () {
+      return !this.isGuest; // Password only required for non-guest users
+    },
+  },
   avatar: {
     type: String,
     required: true,
+  },
+  isGuest: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,
@@ -24,7 +34,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-//Custom method to check if username exists
+// Custom method to check if username exists
 userSchema.statics.usernameExists = async function (username) {
   const user = await this.findOne({ username });
   return user !== null;
@@ -41,10 +51,9 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-//Cleanup for when a user goes Nuclear on thier account :(
+// Cleanup for when a user goes Nuclear on their account :(
 userSchema.pre("deleteOne", { document: true }, async function (next) {
   try {
-    // Delete all scores associated with this user
     await Score.deleteMany({ userId: this._id });
     next();
   } catch (error) {
