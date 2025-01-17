@@ -1,5 +1,3 @@
-// backend/controllers/scoreController.js
-
 import Score from "../models/score.js";
 import User from "../models/user.js";
 
@@ -8,7 +6,6 @@ export const createScore = async (req, res) => {
     const { username, gameId, score } = req.body;
     console.log("Creating score:", { username, gameId, score });
 
-    // Validate input
     if (!username || !gameId || score === undefined) {
       console.log("Missing required fields:", { username, gameId, score });
       return res.status(400).json({
@@ -17,33 +14,39 @@ export const createScore = async (req, res) => {
       });
     }
 
-    // Find user
-    const user = await User.findOne({ username });
-    console.log("User lookup result:", user ? "Found" : "Not found", {
-      username,
+    // Case-insensitive username lookup
+    const user = await User.findOne({
+      username: { $regex: new RegExp(`^${username}$`, "i") },
     });
 
     if (!user) {
+      console.log("User not found for username:", username);
       return res.status(404).json({
         message: "User not found",
         details: { username },
       });
     }
 
-    // Create score
     const newScore = await Score.create({
       userId: user._id,
       gameId,
       score,
     });
 
-    console.log("Created score:", newScore);
-
-    // Return populated score
+    // Populate user data for the response
     const populatedScore = await Score.findById(newScore._id).populate(
       "userId",
       "username avatar"
     );
+
+    // Emit the new score via Socket.IO if available
+    if (req.socketService) {
+      req.socketService.broadcastScore(gameId, {
+        score: populatedScore,
+        username: username,
+        gameId: gameId,
+      });
+    }
 
     res.status(201).json(populatedScore);
   } catch (error) {
@@ -66,7 +69,6 @@ export const getGameLeaderboard = async (req, res) => {
       .limit(100)
       .populate("userId", "username avatar");
 
-    // Filter out scores with deleted users
     const validScores = scores.filter((score) => score.userId != null);
     console.log(`Found ${validScores.length} valid scores`);
 

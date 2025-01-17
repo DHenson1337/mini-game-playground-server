@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/conn.js";
 import rateLimit from "express-rate-limit";
+import SocketService from "./services/socketService.js";
 
 //Importing routes
 import userRoutes from "./routes/userRoutes.js";
@@ -26,6 +27,10 @@ const io = new Server(httpServer, {
   },
 });
 
+// Initialize Socket Service
+const socketService = new SocketService(io);
+socketService.initialize();
+
 //Middleware
 app.use(cors());
 app.use(express.json());
@@ -41,29 +46,19 @@ app.use((req, res, next) => {
 //MongoDB Connection
 connectDB();
 
-//Socket connection handler
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
-
 const PORT = process.env.PORT || 5000;
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Increase this from your current limit
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Create a specific limiter for game fetching
 const gameLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // Increased from 30 to 100 requests per minute
+  windowMs: 1 * 60 * 1000,
+  max: 100,
   message: {
     status: 429,
     message: "Too many requests, please try again later",
@@ -80,12 +75,12 @@ app.use("/api/games", gameLimiter);
 
 //Routes
 app.use("/api/users", userRoutes);
-app.use("/api/scores", scoreRoutes);
+app.use("/api/scores", scoreRoutes(socketService));
 app.use("/api/games", gameRoutes);
 
 //Port Listener
 httpServer.listen(PORT, () => {
-  console.log(`Server is racing 🏍 Sanic on port  ${PORT}`);
+  console.log(`Server is racing 🏍 Sanic on port ${PORT}`);
 });
 
 //Error handling middleware
