@@ -107,7 +107,7 @@ export const updateGame = async (req, res) => {
 
 /**
  * Initializes the database with default games if empty
- * @route POST /api/games/initialize
+ * @route POST /api/games/initialize  (http://localhost:5000/api/games/init)
  * @description Seeds the database with initial game data if no games exist
  * @returns {Object} Success message
  * @throws {500} If initialization fails
@@ -137,9 +137,56 @@ export const initializeGames = async (req, res) => {
         featured: true,
         enabled: true,
         order: 1,
-        thumbnailUrl: "/assets/placeholders/tetris-thumb.png",
-        previewUrl: "/assets/placeholders/tetris-preview.png",
+        thumbnailUrl: "/assets/games/tetris/thumb.png",
+        previewUrl: "/assets/games/tetris/preview.gif",
       },
+      {
+        gameId: "tic-tac-toe",
+        title: "Tic Tac Toe",
+        description:
+          "Challenge the AI in this classic game of X's and O's. Win two games in a match to earn points!",
+        engineType: "js",
+        sourceUrl: "/games/tic-tac-toe/index.js",
+        category: "puzzle",
+        thumbnailUrl: "/assets/games/tic-tac-toe/thumb.png",
+        previewUrl: "/assets/games/tic-tac-toe/preview.gif",
+        controls: [{ key: "Mouse", action: "Place X" }],
+        rules: [
+          "Get three in a row horizontally, vertically, or diagonally to win",
+          "Win 2 games to win the match and earn points",
+          "Losing the match halves your score",
+          "Higher difficulty levels multiply your score",
+        ],
+        enabled: true,
+        order: 2,
+        featured: false,
+      },
+
+      {
+        gameId: "snake",
+        title: "Snake Game",
+        description:
+          "Control the snake, eat the food, and grow as long as you can!",
+        engineType: "js",
+        sourceUrl: "/games/snake/index.js",
+        category: "arcade",
+        controls: [
+          { key: "Arrow Keys", action: "Move the snake" },
+          { key: "Space", action: "Pause/Resume" },
+        ],
+        rules: [
+          "Use arrow keys to move the snake.",
+          "Collect food to grow and earn points.",
+          "Avoid colliding with the walls or yourself.",
+          "Choose between edge wrapping and non-wrapping modes.",
+        ],
+        thumbnailUrl: "/assets/games/snake/thumb.png",
+        previewUrl: "/assets/games/snake/preview.gif",
+        enabled: true,
+        order: 3,
+        featured: false,
+      },
+
       // Add more games here later
     ];
 
