@@ -23,10 +23,13 @@ const httpServer = createServer(app);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin:
+    process.env.NODE_ENV === "production"
+      ? process.env.FRONTEND_URL // Will be your Netlify URL in production
+      : "http://localhost:5173", // Development URL
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, // This is important for cookies
+  credentials: true,
 };
 
 // Socket.IO setup with CORS
