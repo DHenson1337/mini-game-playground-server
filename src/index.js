@@ -57,8 +57,8 @@ connectDB();
 const PORT = process.env.PORT || 5000;
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, //15 minutes time out
+  max: 1000, // 1000 requests per windowMs
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
@@ -66,7 +66,7 @@ const limiter = rateLimit({
 
 const gameLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 100,
+  max: 300, // Max  300 requests per minute
   message: {
     status: 429,
     message: "Too many requests, please try again later",
