@@ -25,7 +25,7 @@ const httpServer = createServer(app);
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
-      ? ["https://your-netlify-app.netlify.app", "http://localhost:5173"] // Add your Netlify URL later
+      ? ["https://mini-game-playground.netlify.app/", "http://localhost:5173"]
       : "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
