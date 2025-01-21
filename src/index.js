@@ -25,12 +25,14 @@ const httpServer = createServer(app);
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
-      ? process.env.FRONTEND_URL // Will be your Netlify URL in production
-      : "http://localhost:5173", // Development URL
+      ? ["https://your-netlify-app.netlify.app", "http://localhost:5173"] // Add your Netlify URL later
+      : "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
+
+app.use(cors(corsOptions));
 
 // Socket.IO setup with CORS
 const io = new Server(httpServer, {
