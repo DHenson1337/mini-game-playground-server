@@ -24,7 +24,7 @@ class AuthService {
         isGuest: user.isGuest,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m" }
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "2h" }
     );
   }
 
@@ -97,20 +97,26 @@ class AuthService {
    * @param {string} refreshToken - JWT refresh token
    */
   setTokenCookies(res, accessToken, refreshToken = null) {
+    const isProduction = process.env.NODE_ENV === "production";
+
+    // Base cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction, // Only use secure in production
+      sameSite: isProduction ? "none" : "lax", // 'none' for cross-site in production
+      path: "/",
+    };
+
     // Set access token cookie
     res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      ...cookieOptions,
       maxAge: 2 * 60 * 60 * 1000, // 2 hours
     });
 
-    // Set refresh token cookie if provided (remember me)
+    // Set refresh token cookie if provided
     if (refreshToken) {
       res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     }
@@ -121,8 +127,16 @@ class AuthService {
    * @param {Object} res - Express response object
    */
   clearTokenCookies(res) {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      path: "/",
+    };
+
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
   }
 }
 
